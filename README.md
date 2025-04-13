@@ -48,6 +48,9 @@ downstreamAPI.AddEndpoint(&fakes.Endpoint{
     Response: `{"status": "great success"}`,
     ContentType: "plaintext",
     StatusCode: http.StatusUnauthorised,
+    Headers: fakes.Headers{
+		"Authorization": "Bearer some-bearer",
+    },
     Expectation: func(r *http.Request) {
         // run assertions on the incoming http request to ensure
         // that you are sending the right data to any of the APIs
