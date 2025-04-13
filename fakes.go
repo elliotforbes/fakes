@@ -35,6 +35,8 @@ type FakeService struct {
 	router     *gin.Engine
 	testserver *httptest.Server
 	Endpoints  []*Endpoint
+
+	BaseURL string
 }
 
 func NewFakeHTTP(port string) *FakeService {
@@ -93,6 +95,7 @@ func (f *FakeService) Run(t *testing.T) {
 	}
 	f.testserver.Listener = l
 	f.testserver.Start()
+	f.BaseURL = f.testserver.URL
 	t.Log("Fake Service Successfully Started")
 
 }

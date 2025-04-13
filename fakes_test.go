@@ -25,6 +25,22 @@ func TestFakes(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
+	})
 
+	t.Run("test the new BaseURL field on the fakeServer struct", func(t *testing.T) {
+		fakeServer := fakes.NewFakeHTTP("8080")
+		fakeServer.AddEndpoint(&fakes.Endpoint{
+			Path:     "/",
+			Response: "{}",
+		})
+		fakeServer.Run(t)
+
+		request, err := http.NewRequest(http.MethodGet, fakeServer.BaseURL, nil)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
 	})
 }
