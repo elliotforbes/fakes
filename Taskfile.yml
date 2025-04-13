@@ -1,0 +1,10 @@
+version: '3'
+
+tasks:
+  test:
+    cmds:
+      - go test -v ./... 
+
+  lint:
+    cmds:
+      - golangci-lint run

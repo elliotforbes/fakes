@@ -16,6 +16,7 @@ type Endpoint struct {
 	Path        string
 	Response    string
 	StatusCode  int
+	ContentType string
 	Expectation func(*http.Request)
 
 	calls int
@@ -55,6 +56,10 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 			e.Expectation(c.Request)
 		}
 
+		if e.ContentType != "" {
+			c.Header("Content-Type", e.ContentType)
+		}
+
 		status := e.StatusCode
 		if status == 0 {
 			status = http.StatusOK
@@ -78,12 +83,12 @@ func (f *FakeService) Run(t *testing.T) {
 	t.Logf("Fake Service Starting Up on port: %s", f.port)
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", f.port))
 	if err != nil {
-		t.Errorf(fmt.Sprintf("Failed to listen: %s", err.Error()))
+		t.Errorf("Failed to listen: %s", err.Error())
 		return
 	}
 	err = f.testserver.Listener.Close()
 	if err != nil {
-		t.Errorf(fmt.Sprintf("Failed to close the testserver listener: %s", err.Error()))
+		t.Errorf("Failed to close the testserver listener: %s", err.Error())
 		return
 	}
 	f.testserver.Listener = l

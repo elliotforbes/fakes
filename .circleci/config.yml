@@ -1,16 +1,27 @@
 version: 2.1
 
+orbs:
+  golangci-lint: timakin/golangci-lint@0.1.1
+
 jobs:
   unit-test:
+    docker:
+      - image: cimg/go:1.24.2
+    steps:
+      - checkout
+      - run:
+          name: "Running Unit Tests"
+          command: "go test ./..."
+  
+  lint:
     docker:
       - image: cimg/base:current
     steps:
       - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+      - golangci-lint/lint
 
 workflows:
   run-tests: 
     jobs:
       - unit-test
+      - lint
