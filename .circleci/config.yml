@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  golangci-lint: valimail/golangci-lint@volatile
-
 jobs:
   unit-test:
     docker:
@@ -15,10 +12,10 @@ jobs:
   
   lint:
     docker:
-      - image: cimg/base:current
+      - image: golangci/golangci-lint:v2.1.1-alpine
     steps:
       - checkout
-      - golangci-lint/lint
+      - run: golangci-lint run
 
 workflows:
   run-tests: 
