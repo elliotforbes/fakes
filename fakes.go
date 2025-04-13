@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,6 +38,8 @@ func NewFakeHTTP() *FakeService {
 	}
 }
 
+type Headers map[string]string
+
 // Endpoint - represents an Endpoint defined
 // under the context of a FakeService.
 type Endpoint struct {
@@ -45,6 +48,7 @@ type Endpoint struct {
 	StatusCode  int
 	ContentType string
 	Expectation func(*http.Request)
+	Headers     Headers
 
 	calls int
 	mutex sync.Mutex
@@ -85,10 +89,19 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 		if status == 0 {
 			status = http.StatusOK
 		}
-		fmt.Printf("%s: %s - HTTP %d\n%s", c.Request.Method, c.Request.URL, status, e.Response)
+		fmt.Printf("%s: %s - HTTP %d\n%s\n", c.Request.Method, c.Request.URL, status, e.Response)
 		e.recordCall()
 
-		c.String(status, e.Response)
+		for header, value := range e.Headers {
+			fmt.Println(header)
+			fmt.Println(value)
+			c.Header(header, value)
+		}
+
+		c.Render(status, render.Data{
+			ContentType: e.ContentType,
+			Data:        []byte(e.Response),
+		})
 	})
 }
 
