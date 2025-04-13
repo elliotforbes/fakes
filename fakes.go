@@ -58,6 +58,8 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 
 		if e.ContentType != "" {
 			c.Header("Content-Type", e.ContentType)
+		} else {
+			c.Header("Content-Type", "application/json")
 		}
 
 		status := e.StatusCode
