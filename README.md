@@ -19,7 +19,7 @@ do some assertions against.
 // Basic Example - you just want your application to be able to hit a fake service
 t.Run("My awesome acceptance test", func(t *testing.T) {
     downstreamAPI := fakes.NewFakeHTTP("8000")
-    downstreamAPI.AddEndpoint(fakes.Endpoint{
+    downstreamAPI.AddEndpoint(&fakes.Endpoint{
         Path: "/some/path/my/app/hits",
         Response: `{"status": "great success"}`,
     })
