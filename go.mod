@@ -1,6 +1,6 @@
 module github.com/elliotforbes/fakes
 
-go 1.21.4
+go 1.24.2
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect
