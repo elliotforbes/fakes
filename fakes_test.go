@@ -95,4 +95,41 @@ func TestFakes(t *testing.T) {
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "Bearer some-bearer", response.Header["Authorization"][0])
 	})
+
+	t.Run("test that the fake lib only sets up explicit paths", func(t *testing.T) {
+		fakeServer := fakes.NewFakeHTTP()
+		fakeServer.AddEndpoint(&fakes.Endpoint{
+			Path:     "/",
+			Response: "{}",
+			Methods:  []string{http.MethodGet},
+			Headers: fakes.Headers{
+				"Authorization": "Bearer some-bearer",
+			},
+		})
+		fakeServer.Run(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, "Bearer some-bearer", response.Header["Authorization"][0])
+
+		request, err = http.NewRequest(
+			http.MethodPost,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err = http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, response.StatusCode)
+	})
 }
