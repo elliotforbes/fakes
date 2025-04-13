@@ -31,17 +31,17 @@ func (e *Endpoint) recordCall() {
 }
 
 type FakeService struct {
-	port       string
 	router     *gin.Engine
 	testserver *httptest.Server
 	Endpoints  []*Endpoint
+
+	BaseURL string
 }
 
-func NewFakeHTTP(port string) *FakeService {
+func NewFakeHTTP() *FakeService {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	return &FakeService{
-		port:       port,
 		router:     router,
 		testserver: httptest.NewUnstartedServer(router),
 	}
@@ -72,7 +72,7 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 }
 
 func (f *FakeService) TidyUp(t *testing.T) {
-	t.Logf("FakeService tidyup - port:%s", f.port)
+	t.Log("FakeService tidyup...")
 	for _, e := range f.Endpoints {
 		assert.GreaterOrEqual(t, e.calls, 1, "endpoint %s has not been called within this test")
 	}
@@ -80,8 +80,8 @@ func (f *FakeService) TidyUp(t *testing.T) {
 }
 
 func (f *FakeService) Run(t *testing.T) {
-	t.Logf("Fake Service Starting Up on port: %s", f.port)
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", f.port))
+	t.Log("Fake Service Starting up...")
+	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Errorf("Failed to listen: %s", err.Error())
 		return
@@ -93,6 +93,7 @@ func (f *FakeService) Run(t *testing.T) {
 	}
 	f.testserver.Listener = l
 	f.testserver.Start()
-	t.Log("Fake Service Successfully Started")
+	f.BaseURL = f.testserver.URL
+	t.Logf("Fake Service Successfully Started: %s", f.testserver.Listener.Addr())
 
 }
