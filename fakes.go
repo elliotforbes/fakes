@@ -12,6 +12,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// FakeService - the core of this lib.
+// features a ref to a gin.Engine and a
+// slice of Endpoints.
+// BaseURL is an exposed field which is
+// set at the point at which the Run method
+// is called.
+type FakeService struct {
+	router     *gin.Engine
+	testserver *httptest.Server
+	Endpoints  []*Endpoint
+
+	BaseURL string
+}
+
+// NewFakeHTTP - a constructor that spins up
+// a new reference to a FakeService.
+func NewFakeHTTP() *FakeService {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	return &FakeService{
+		router:     router,
+		testserver: httptest.NewUnstartedServer(router),
+	}
+}
+
+// Endpoint - represents an Endpoint defined
+// under the context of a FakeService.
 type Endpoint struct {
 	Path        string
 	Response    string
@@ -23,6 +50,8 @@ type Endpoint struct {
 	mutex sync.Mutex
 }
 
+// recordCall - a threadsafe method that safely
+// increments the `calls` field on the endpoint.
 func (e *Endpoint) recordCall() {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
@@ -30,23 +59,13 @@ func (e *Endpoint) recordCall() {
 	e.calls++
 }
 
-type FakeService struct {
-	router     *gin.Engine
-	testserver *httptest.Server
-	Endpoints  []*Endpoint
-
-	BaseURL string
-}
-
-func NewFakeHTTP() *FakeService {
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	return &FakeService{
-		router:     router,
-		testserver: httptest.NewUnstartedServer(router),
-	}
-}
-
+// AddEndpoint - registers a new endpoint on the fake service.
+// This will set some sensible defaults should the Endpoint not have
+// them explicitly defined.
+// For example, we default to HTTP 200 statuses and a Content-Type of
+// 'application/json'.
+// Whenever said endpoint is called, we ensure that we record the call
+// and increment the `calls` field.
 func (f *FakeService) AddEndpoint(e *Endpoint) {
 	f.Endpoints = append(f.Endpoints, e)
 	f.router.Any(e.Path, func(c *gin.Context) {
@@ -73,6 +92,10 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 	})
 }
 
+// TidyUp - this method ranges over all of the endpoints defined
+// under this FakeService and ensures that each of them have been called
+// at least once. If the call count is 0, then this will fail the test
+// that depends on this fake service.
 func (f *FakeService) TidyUp(t *testing.T) {
 	t.Log("FakeService tidyup...")
 	for _, e := range f.Endpoints {
@@ -81,6 +104,10 @@ func (f *FakeService) TidyUp(t *testing.T) {
 	f.testserver.Close()
 }
 
+// Run - starts up the fake service. This creates a custom net listener
+// which then replaces the testserver listener. This was due to communication
+// issues between docker containers originally, however, this argument may
+// no longer hold water.
 func (f *FakeService) Run(t *testing.T) {
 	t.Log("Fake Service Starting up...")
 	l, err := net.Listen("tcp", ":0")
