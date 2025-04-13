@@ -46,8 +46,16 @@ full control of what happens in the event of this endpoint being called:
 downstreamAPI.AddEndpoint(&fakes.Endpoint{
     Path: "/some/path/my/app/hits",
     Response: `{"status": "great success"}`,
+    // if ContentType is not specified, we assume `application/json`
     ContentType: "plaintext",
+    // if statuscode is not specified, we assume a 200
+    // status code response
     StatusCode: http.StatusUnauthorised,
+    // if Methods is not specified, we assume it could
+    // hit any HTTP method
+    Methods: []string{
+        http.MethodGet,
+    },
     Headers: fakes.Headers{
 		"Authorization": "Bearer some-bearer",
     },
