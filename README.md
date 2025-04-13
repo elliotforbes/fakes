@@ -30,7 +30,7 @@ downstreamAPI.Run(t)
 
 Hitting this API will result in the following response:
 
-```http
+```
 HTTP 200 
 Content-Type: application/json
 
