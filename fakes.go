@@ -46,6 +46,7 @@ type Endpoint struct {
 	Path        string
 	Response    string
 	StatusCode  int
+	Methods     []string
 	ContentType string
 	Expectation func(*http.Request)
 	Headers     Headers
@@ -72,7 +73,24 @@ func (e *Endpoint) recordCall() {
 // and increment the `calls` field.
 func (f *FakeService) AddEndpoint(e *Endpoint) {
 	f.Endpoints = append(f.Endpoints, e)
-	f.router.Any(e.Path, func(c *gin.Context) {
+
+	// if the user of the lib doesn't explicitly set the
+	// methods on the Endpoint, we assume that we can match any
+	if len(e.Methods) == 0 {
+		e.Methods = []string{
+			http.MethodGet,
+			http.MethodDelete,
+			http.MethodHead,
+			http.MethodOptions,
+			http.MethodPatch,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodTrace,
+			http.MethodConnect,
+		}
+	}
+
+	f.router.Match(e.Methods, e.Path, func(c *gin.Context) {
 		// If there are specific expectations attached
 		// to a given endpoint, run through these expectations now.
 		if e.Expectation != nil {
