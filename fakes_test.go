@@ -2,11 +2,13 @@ package fakes_test
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/elliotforbes/fakes"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,6 +27,8 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
@@ -42,6 +46,8 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 	})
@@ -67,6 +73,8 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 	})
@@ -91,9 +99,40 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "Bearer some-bearer", response.Header["Authorization"][0])
+	})
+
+	t.Run("test we can use the override handler", func(t *testing.T) {
+		fakeServer := fakes.NewFakeHTTP()
+		fakeServer.AddEndpoint(&fakes.Endpoint{
+			Path: "/",
+			Handler: func(c *gin.Context) {
+				c.JSON(http.StatusOK, gin.H{"hello": "world"})
+			},
+		})
+		fakeServer.Run(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+
+		body, err := io.ReadAll(response.Body)
+		assert.Nil(t, err)
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		assert.Equal(t, `{"hello":"world"}`, string(body))
 	})
 
 	t.Run("test that the fake lib only sets up explicit paths", func(t *testing.T) {
@@ -117,6 +156,8 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "Bearer some-bearer", response.Header["Authorization"][0])
