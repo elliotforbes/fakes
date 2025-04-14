@@ -27,6 +27,8 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
@@ -44,6 +46,7 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -70,6 +73,7 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -95,6 +99,7 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -120,6 +125,7 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
 		defer response.Body.Close()
 
 		body, err := io.ReadAll(response.Body)
@@ -150,6 +156,7 @@ func TestFakes(t *testing.T) {
 
 		response, err := http.DefaultClient.Do(request)
 		assert.Nil(t, err)
+		//nolint
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
