@@ -50,6 +50,7 @@ type Endpoint struct {
 	ContentType string
 	Expectation func(*http.Request)
 	Headers     Headers
+	Handler     func(*gin.Context)
 
 	calls int
 	mutex sync.Mutex
@@ -114,6 +115,11 @@ func (f *FakeService) AddEndpoint(e *Endpoint) {
 			fmt.Println(header)
 			fmt.Println(value)
 			c.Header(header, value)
+		}
+
+		if e.Handler != nil {
+			e.Handler(c)
+			return
 		}
 
 		c.Render(status, render.Data{
