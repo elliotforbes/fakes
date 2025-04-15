@@ -173,4 +173,29 @@ func TestFakes(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, response.StatusCode)
 	})
+
+	t.Run("test that we can specify a distinct port", func(t *testing.T) {
+		fakeServer := fakes.New(fakes.WithPort(10000))
+		fakeServer.Endpoint(&fakes.Endpoint{
+			Path:     "/",
+			Response: "{}",
+			Methods:  []string{http.MethodGet},
+			Headers: fakes.Headers{
+				"Authorization": "Bearer some-bearer",
+			},
+		})
+		fakeServer.Run(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			"http://localhost:10000",
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+	})
 }
