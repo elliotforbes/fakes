@@ -24,17 +24,30 @@ type FakeService struct {
 	testserver *httptest.Server
 	Endpoints  []*Endpoint
 
+	Port    int
 	BaseURL string
 }
 
 // NewFakeHTTP - a constructor that spins up
 // a new reference to a FakeService.
-func New() *FakeService {
+func New(opts ...func(*FakeService)) *FakeService {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	return &FakeService{
+	fakeService := &FakeService{
 		router:     router,
 		testserver: httptest.NewUnstartedServer(router),
+	}
+
+	for _, o := range opts {
+		o(fakeService)
+	}
+
+	return fakeService
+}
+
+func WithPort(port int) func(*FakeService) {
+	return func(f *FakeService) {
+		f.Port = port
 	}
 }
 
@@ -147,7 +160,7 @@ func (f *FakeService) TidyUp(t *testing.T) {
 // no longer hold water.
 func (f *FakeService) Run(t *testing.T) {
 	t.Log("Fake Service Starting up...")
-	l, err := net.Listen("tcp", ":0")
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", f.Port))
 	if err != nil {
 		t.Errorf("Failed to listen: %s", err.Error())
 		return
