@@ -29,7 +29,7 @@ type FakeService struct {
 
 // NewFakeHTTP - a constructor that spins up
 // a new reference to a FakeService.
-func NewFakeHTTP() *FakeService {
+func New() *FakeService {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	return &FakeService{
@@ -65,14 +65,14 @@ func (e *Endpoint) recordCall() {
 	e.calls++
 }
 
-// AddEndpoint - registers a new endpoint on the fake service.
+// Endpoint - registers a new endpoint on the fake service.
 // This will set some sensible defaults should the Endpoint not have
 // them explicitly defined.
 // For example, we default to HTTP 200 statuses and a Content-Type of
 // 'application/json'.
 // Whenever said endpoint is called, we ensure that we record the call
 // and increment the `calls` field.
-func (f *FakeService) AddEndpoint(e *Endpoint) {
+func (f *FakeService) Endpoint(e *Endpoint) {
 	f.Endpoints = append(f.Endpoints, e)
 
 	// if the user of the lib doesn't explicitly set the

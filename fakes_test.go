@@ -15,8 +15,8 @@ import (
 func TestFakes(t *testing.T) {
 
 	t.Run("we can run an in-memory test fake", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path:     "/",
 			Response: "{}",
 		})
@@ -35,8 +35,8 @@ func TestFakes(t *testing.T) {
 	})
 
 	t.Run("test the new BaseURL field on the fakeServer struct", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path:     "/",
 			Response: "{}",
 		})
@@ -53,8 +53,8 @@ func TestFakes(t *testing.T) {
 	})
 
 	t.Run("test path parameters work as expected", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path:     "/:id",
 			Response: "{}",
 			Expectation: func(r *http.Request) {
@@ -80,8 +80,8 @@ func TestFakes(t *testing.T) {
 	})
 
 	t.Run("test we can set headers", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path:     "/",
 			Response: "{}",
 			Headers: fakes.Headers{
@@ -107,8 +107,8 @@ func TestFakes(t *testing.T) {
 	})
 
 	t.Run("test we can use the override handler", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path: "/",
 			Handler: func(c *gin.Context) {
 				c.JSON(http.StatusOK, gin.H{"hello": "world"})
@@ -136,8 +136,8 @@ func TestFakes(t *testing.T) {
 	})
 
 	t.Run("test that the fake lib only sets up explicit paths", func(t *testing.T) {
-		fakeServer := fakes.NewFakeHTTP()
-		fakeServer.AddEndpoint(&fakes.Endpoint{
+		fakeServer := fakes.New()
+		fakeServer.Endpoint(&fakes.Endpoint{
 			Path:     "/",
 			Response: "{}",
 			Methods:  []string{http.MethodGet},
