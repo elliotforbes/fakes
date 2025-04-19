@@ -34,11 +34,27 @@ downstreamAPI.Run(t)
 Hitting this API will result in the following response:
 
 ```
+HTTP GET /some/path/my/app/hits 
+
+// returns a response:
+
 HTTP 200 
 Content-Type: application/json
 
 {"status": "great success"}
 ```
+
+## Specifying A Port
+
+There are some instances where you need to specify a port upon which these fakes will run. To achieve this, you
+can pass in the `fakes.WithPort(N)` optional parameter:
+
+```go
+downstreamAPI := fakes.New(fakes.WithPort(10000))
+...
+```
+
+
 
 ### Endpoints
 
