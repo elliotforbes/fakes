@@ -2,6 +2,7 @@ package fakes
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -61,9 +62,22 @@ type Endpoint struct {
 	StatusCode  int
 	Methods     []string
 	ContentType string
-	Expectation func(*http.Request)
 	Headers     Headers
 	Handler     func(*gin.Context)
+	// FailureRatePercent - allows you to specify the probability
+	// of failure for your Endpoint. I.e. 0.8 represents and 80%
+	// chance you'll be met with a 500 response.
+	FailureRatePercent int
+	// FailureHandler - allows you to define a custom failure
+	// handler so that you can model how your upstream dependencies
+	// could fail.
+	FailureHandler func(*gin.Context)
+
+	// Expectation - it can be handy to specify assertions
+	// in the context of the tests you are developing. This
+	// will allow you to make assertions on the request that
+	// eventually makes it to your fake.
+	Expectation func(*http.Request)
 
 	calls int
 	mutex sync.Mutex
@@ -105,6 +119,13 @@ func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 	}
 
 	f.router.Match(e.Methods, e.Path, func(c *gin.Context) {
+		e.recordCall()
+
+		if shouldReturnError(e.FailureRatePercent) {
+			e.FailureHandler(c)
+			return
+		}
+
 		// If there are specific expectations attached
 		// to a given endpoint, run through these expectations now.
 		if e.Expectation != nil {
@@ -122,7 +143,6 @@ func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 			status = http.StatusOK
 		}
 		fmt.Printf("%s: %s - HTTP %d\n%s\n", c.Request.Method, c.Request.URL, status, e.Response)
-		e.recordCall()
 
 		for header, value := range e.Headers {
 			fmt.Println(header)
@@ -142,6 +162,16 @@ func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 	})
 
 	return f
+}
+
+// shouldReturnError - given the endpoint's failure
+// rate - calculates a random int and then compares that
+// against the failureRatePercent.
+//
+// if the failureRatePercent is 20, that represents a 20% chance
+// of returning an error.
+func shouldReturnError(failureRatePercent int) bool {
+	return failureRatePercent > rand.Intn(100)
 }
 
 // TidyUp - this method ranges over all of the endpoints defined
