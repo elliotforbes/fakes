@@ -243,9 +243,9 @@ func TestFakes(t *testing.T) {
 	t.Run("testing chaos - we hit the failure handler", func(t *testing.T) {
 		fakeServer := fakes.New().
 			Endpoint(&fakes.Endpoint{
-				Path:        "/",
-				Response:    "{}",
-				FailureRate: 1,
+				Path:               "/",
+				Response:           "{}",
+				FailureRatePercent: 100,
 				FailureHandler: func(c *gin.Context) {
 					c.JSON(http.StatusBadRequest, gin.H{
 						"error": "something bad happened",
