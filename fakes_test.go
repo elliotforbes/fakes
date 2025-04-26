@@ -238,6 +238,98 @@ func TestFakes(t *testing.T) {
 		defer response.Body.Close()
 
 		assert.Equal(t, http.StatusOK, response.StatusCode)
+	})
 
+	t.Run("testing chaos - we hit the failure handler", func(t *testing.T) {
+		fakeServer := fakes.New().
+			Endpoint(&fakes.Endpoint{
+				Path:               "/",
+				Response:           "{}",
+				FailureRatePercent: 100,
+				FailureHandler: func(c *gin.Context) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "something bad happened",
+					})
+				},
+			}).Run(t)
+		defer fakeServer.TidyUp(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+	})
+
+	t.Run("testing chaos - happy path handler", func(t *testing.T) {
+		fakeServer := fakes.New().
+			Endpoint(&fakes.Endpoint{
+				Path:               "/",
+				Response:           "{}",
+				FailureRatePercent: 0,
+				FailureHandler: func(c *gin.Context) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "something bad happened",
+					})
+				},
+			}).Run(t)
+		defer fakeServer.TidyUp(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+	})
+
+	t.Run("testing chaos - trying to test probability reliably", func(t *testing.T) {
+		fakeServer := fakes.New().
+			Endpoint(&fakes.Endpoint{
+				Path:               "/",
+				Response:           "{}",
+				FailureRatePercent: 50,
+				FailureHandler: func(c *gin.Context) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "something bad happened",
+					})
+				},
+			}).Run(t)
+		defer fakeServer.TidyUp(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		failureHit := false
+		for range 10 {
+			response, err := http.DefaultClient.Do(request)
+			assert.Nil(t, err)
+			//nolint
+			defer response.Body.Close()
+
+			if response.StatusCode == http.StatusBadRequest {
+				failureHit = true
+			}
+		}
+		assert.True(t, failureHit)
 	})
 }

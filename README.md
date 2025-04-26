@@ -108,3 +108,38 @@ fakeServer := fakes.New().
 ```
 
 A nice bit of syntactic sugar for those that prefer this approach!
+
+## Chaos Engineering
+
+In your acceptance tests, it can be useful to model some level of unreliability
+within your tests so that you are consistently handling retries and have a good
+level of resiliency baked into your system.
+
+This can invariably lead to flaky tests depending on how unlucky you are. You might
+have clients that have backoff retries and a retry limit of 5, but somehow, you
+roll 1's 5 times and all of these requests fail. 
+
+I might eventually need a higher level of determinism within my acceptance tests, 
+if that time comes, I can start to consider how I can expose controls that will mean
+that subsequent requests pass.
+
+If you'd like to include an element of chaos into your tests, you can specify the
+`FailureRatePercent` field on each of your endpoints and it'll fail depending on that
+provided percentage:
+
+```go
+fakeServer := fakes.New().
+    Endpoint(&fakes.Endpoint{
+        Path:               "/",
+        Response:           "{}",
+        // 100 means this will always fail
+        FailureRatePercent: 100,
+        // We can specify how we'd like the failure
+        // to respond
+        FailureHandler: func(c *gin.Context) {
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": "something bad happened",
+            })
+        },
+    }).Run(t)
+```
