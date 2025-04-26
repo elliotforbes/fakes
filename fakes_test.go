@@ -198,4 +198,46 @@ func TestFakes(t *testing.T) {
 		//nolint
 		defer response.Body.Close()
 	})
+
+	t.Run("test run on syntax", func(t *testing.T) {
+		fakeServer := fakes.New().
+			Endpoint(&fakes.Endpoint{
+				Path:     "/",
+				Response: "{}",
+			}).
+			Endpoint(&fakes.Endpoint{
+				Path:     "/hello",
+				Response: `{"message":"hello"}`,
+			}).Run(t)
+		defer fakeServer.TidyUp(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err := http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+
+		request, err = http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL+"/hello",
+			nil,
+		)
+		assert.Nil(t, err)
+
+		response, err = http.DefaultClient.Do(request)
+		assert.Nil(t, err)
+		//nolint
+		defer response.Body.Close()
+
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+
+	})
 }

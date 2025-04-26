@@ -89,3 +89,22 @@ downstreamAPI.Endpoint(&fakes.Endpoint{
 > Note: if you define an endpoint for your test, it will need to be hit at least once in order for the tests to pass. This is
 to help prevent unused endpoints from being defined within your tests.
 
+## Stringing Your Setup Together
+
+The `fakes` library includes the ability to string your setup together in
+one succinct assertion. Let's take a look at an example of setting this up 
+with 2 distinct endpoints:
+
+```go
+fakeServer := fakes.New().
+    Endpoint(&fakes.Endpoint{
+        Path:     "/",
+        Response: "{}",
+    }).
+    Endpoint(&fakes.Endpoint{
+        Path:     "/hello",
+        Response: `{"message":"hello"}`,
+    }).Run(t)
+```
+
+A nice bit of syntactic sugar for those that prefer this approach!
