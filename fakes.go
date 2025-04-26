@@ -85,7 +85,7 @@ func (e *Endpoint) recordCall() {
 // 'application/json'.
 // Whenever said endpoint is called, we ensure that we record the call
 // and increment the `calls` field.
-func (f *FakeService) Endpoint(e *Endpoint) {
+func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 	f.Endpoints = append(f.Endpoints, e)
 
 	// if the user of the lib doesn't explicitly set the
@@ -140,6 +140,8 @@ func (f *FakeService) Endpoint(e *Endpoint) {
 			Data:        []byte(e.Response),
 		})
 	})
+
+	return f
 }
 
 // TidyUp - this method ranges over all of the endpoints defined
@@ -158,21 +160,22 @@ func (f *FakeService) TidyUp(t *testing.T) {
 // which then replaces the testserver listener. This was due to communication
 // issues between docker containers originally, however, this argument may
 // no longer hold water.
-func (f *FakeService) Run(t *testing.T) {
+func (f *FakeService) Run(t *testing.T) *FakeService {
 	t.Log("Fake Service Starting up...")
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", f.Port))
 	if err != nil {
 		t.Errorf("Failed to listen: %s", err.Error())
-		return
+		return f
 	}
 	err = f.testserver.Listener.Close()
 	if err != nil {
 		t.Errorf("Failed to close the testserver listener: %s", err.Error())
-		return
+		return f
 	}
 	f.testserver.Listener = l
 	f.testserver.Start()
 	f.BaseURL = f.testserver.URL
 	t.Logf("Fake Service Successfully Started: %s", f.testserver.Listener.Addr())
 
+	return f
 }
