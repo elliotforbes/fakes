@@ -332,4 +332,40 @@ func TestFakes(t *testing.T) {
 		}
 		assert.True(t, failureHit)
 	})
+
+	t.Run("test chaos respects max failure count", func(t *testing.T) {
+		fakeServer := fakes.New().
+			Endpoint(&fakes.Endpoint{
+				Path:               "/",
+				Response:           "{}",
+				FailureRatePercent: 100,
+				FailureHandler: func(c *gin.Context) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "something bad happened",
+					})
+				},
+			}).Run(t)
+		defer fakeServer.TidyUp(t)
+
+		request, err := http.NewRequest(
+			http.MethodGet,
+			fakeServer.BaseURL,
+			nil,
+		)
+		assert.Nil(t, err)
+
+		successHit := false
+		for range 4 {
+			response, err := http.DefaultClient.Do(request)
+			assert.Nil(t, err)
+			//nolint
+			defer response.Body.Close()
+
+			if response.StatusCode == http.StatusOK {
+				successHit = true
+			}
+		}
+		assert.True(t, successHit)
+
+	})
 }

@@ -143,3 +143,29 @@ fakeServer := fakes.New().
         },
     }).Run(t)
 ```
+
+#### Controlling Chaos
+
+Whilst chaos is a great way of testing retry limits on your tests, you do also
+need to have some level of determinism to ensure you're not being plagued by flaky tests.
+
+```go
+fakeServer := fakes.New().
+    Endpoint(&fakes.Endpoint{
+        Path:               "/",
+        Response:           "{}",
+        // 100 means this will always fail
+        FailureRatePercent: 100,
+
+        // defines how many times this endpoint
+        // can fail before it reverts to a happy
+        // path
+        MaxFailureCount: 5,
+        // We can specify how we'd like the failure
+        // to respond
+        FailureHandler: func(c *gin.Context) {
+            c.JSON(http.StatusBadRequest, gin.H{
+                "error": "something bad happened",
+            })
+        },
+    }).Run(t)

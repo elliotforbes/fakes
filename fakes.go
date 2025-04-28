@@ -72,6 +72,9 @@ type Endpoint struct {
 	// handler so that you can model how your upstream dependencies
 	// could fail.
 	FailureHandler func(*gin.Context)
+	// MaxFailureCount - the maximum number of times chaos
+	// can ensue within these fakes. Defaults to 3
+	MaxFailureCount int
 
 	// Expectation - it can be handy to specify assertions
 	// in the context of the tests you are developing. This
@@ -101,6 +104,8 @@ func (e *Endpoint) recordCall() {
 // and increment the `calls` field.
 func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 	f.Endpoints = append(f.Endpoints, e)
+	// sensible default
+	e.MaxFailureCount = 3
 
 	// if the user of the lib doesn't explicitly set the
 	// methods on the Endpoint, we assume that we can match any
@@ -121,7 +126,11 @@ func (f *FakeService) Endpoint(e *Endpoint) *FakeService {
 	f.router.Match(e.Methods, e.Path, func(c *gin.Context) {
 		e.recordCall()
 
-		if shouldReturnError(e.FailureRatePercent) {
+		// We only want to return errors up to a point, this
+		// will help keep a level of determinism within our
+		// acceptance test setups and prevent flaky tests.
+		if shouldReturnError(e.FailureRatePercent) &&
+			e.calls <= e.MaxFailureCount-1 {
 			e.FailureHandler(c)
 			return
 		}
